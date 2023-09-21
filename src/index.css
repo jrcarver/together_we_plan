@@ -1,13 +1,85 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+:root {
+  --primary-color: rgb(44, 44, 44);
+  --secondary-color: rgb(77, 0, 0);
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background-color: var(--primary-color);
+  color: white;
+  min-height: 100vh;
+}
+
+.wrapper {
+  display: flex;           /* enables flexbox */
+  flex-direction: column;  /* stack children vertically */
+  justify-content: center; /* center children vertically */
+  align-items: center;     /* center children horizontally */
+  height: 100%;            /* take full viewport height */
+}
+
+.logout {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 50;
+}
+
+.friends {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 50;
+}
+
+.button {
+  cursor: pointer;
+  border-radius: 10px;
+  border: none;
+  background-color: var(--secondary-color);
+  color: white;
+  width: 150px;
+  height: 30px;
+  display: inline-block;
+  margin: 5px;
+}
+
+.input-line {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.simple-text-input {
+  border: none;
+  height: 30px;
+  flex-grow: 1;
+  box-sizing: border-box;
+}
+
+.modal {
+  position: fixed; 
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.9); 
+  z-index: 100; 
+}
+
+.modal-content {
+  border-radius: 20px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 20px;
+  background-color: var(--primary-color);
+  width: 50%;
+  max-width: 500px;
+  height: auto;
+  max-height: 80%;
+  overflow-y: auto;
 }
