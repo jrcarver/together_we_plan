@@ -4,7 +4,7 @@ Start by cloning this project to your computer, then follow the following instru
 
 ### Frontend Setup
 Install react
-Run from command line in base folder: npm install @auth0/auth0-react js-cookie react-bootstrap  
+Run from command line in base folder: npm install @auth0/auth0-react js-cookie react-bootstrap react-datepicker 
   
 FYI: frontend runs on localhost:3000
 
@@ -12,7 +12,7 @@ FYI: frontend runs on localhost:3000
 Install python
 Navigate into backend folder and create venv: py -m venv env  
 Navigate back into together_we_plan base folder and activate venv: .\backend\env\Scripts\activate  
-Run after activating venv: pip install flask python-dotenv Flask-SQLAlchemy Flask-CORS  
+Run after activating venv: pip install flask python-dotenv Flask-SQLAlchemy Flask-CORS datetime  
 Need a .flaskenv file in the backend folder with these things, make sure to specify your database username and password:  
   
 FLASK_APP=base.py  

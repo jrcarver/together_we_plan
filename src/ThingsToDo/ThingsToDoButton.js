@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Button } from "react-bootstrap";
-import CreateEventForm from "./CreateEventForm";
+import ThingsToDo from './ThingsToDo.js';
 
-export default function CreateEventButton() {
+export default function ThingsToDoButton() {
   const [displayForm, setDisplayForm] = useState(false, null);
 
   function showForm() {
@@ -17,10 +17,10 @@ export default function CreateEventButton() {
 
   return (
     <div>
-      <Button className='button' onClick={() => showForm()}>Plan an Event</Button>
+      <Button className='button' onClick={() => showForm()}>Things To Do!</Button>
       {displayForm && (
         <div className='modal' onClick={clickOutside}>
-          <CreateEventForm />
+          <ThingsToDo />
         </div>
       )}
     </div>

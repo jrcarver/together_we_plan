@@ -5,6 +5,7 @@ import CreateEventButton from "./EventCreation/CreateEventButton.js";
 import ViewEventsButton from "./Event/ViewEventsButton.js";
 import ProfileButton from "./Profile/ProfileButton.js";
 import FriendsButton from "./Friends/FriendsButton.js";
+import ThingsToDoButton from "./ThingsToDo/ThingsToDoButton.js";
 
 export const Auth = React.createContext();
 
@@ -52,6 +53,7 @@ export default function MainPage(props) {
         <p>Hello {alias ? alias : user.name}!</p>
         <CreateEventButton />
         <ViewEventsButton />
+        <ThingsToDoButton />
         <FriendsButton />
         <ProfileButton />
       </div>

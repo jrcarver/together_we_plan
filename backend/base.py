@@ -3,6 +3,7 @@ import os
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from sqlalchemy import or_
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
@@ -67,6 +68,42 @@ class Friends(db.Model):
       'userid2': self.userid2,
       'accepted': self.accepted,
       'waitingon': self.waitingon
+    }
+  
+class Event(db.Model):
+  __tablename__ = 'events'
+
+  id = db.Column(db.Integer, primary_key=True)
+  owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+  user_ids = db.Column(db.ARRAY(db.Integer))
+  name = db.Column(db.String(255), nullable=False)
+  start_time = db.Column(db.DateTime)
+  end_time = db.Column(db.DateTime)
+  location = db.Column(db.String(255))
+  description = db.Column(db.Text)
+
+  def __init__(self, owner_id, name, user_ids=None, start_time=None, end_time=None, location=None, description=None):
+    self.owner_id = owner_id
+    self.user_ids = user_ids
+    self.name = name
+    self.start_time = start_time
+    self.end_time = end_time
+    self.location = location
+    self.description = description
+    
+  def __repr__(self):
+    return f"<Event {self.id} - {self.name}>"
+
+  def serialize(self):
+    return {
+      'id': self.id,
+      'owner_id': self.owner_id,
+      'user_ids': self.user_ids,
+      'name': self.name,
+      'start_time': self.start_time.strftime('%Y-%m-%d %H:%M:%S') if self.start_time else None,
+      'end_time': self.end_time.strftime('%Y-%m-%d %H:%M:%S') if self.end_time else None,
+      'location': self.location,
+      'description': self.description
     }
 
 #
@@ -228,5 +265,63 @@ def deny_friend():
 
   return jsonify({"message": "Successfully removed request"}), 200
 
+# create a new event
+@app.route('/create-event', methods=['POST'])
+def create_event():
+  data = request.get_json()
+
+  start_time_converted=None
+  end_time_converted=None
+
+  if data.get('start_time'):
+    start_time_converted = datetime.fromisoformat(data.get('start_time'))
+  if data.get('end_time'):
+    end_time_converted = datetime.fromisoformat(data.get('end_time'))
+
+  new_event = Event(
+    owner_id=data['owner_id'],
+    user_ids=data.get('user_ids', []),
+    name=data['name'],
+    start_time=start_time_converted,
+    end_time=end_time_converted,
+    location=data.get('location'),
+    description=data.get('description')
+  )
+
+  try:
+    db.session.add(new_event)
+    db.session.commit()
+    return jsonify({"message": "Event created successfully!", "event_id": new_event.id}), 201
+  except Exception as e:
+    db.session.rollback()
+    return jsonify({"error": f"An error occurred: {str(e)}"}), 400
+  
+# get user events
+@app.route('/get-events', methods=['POST'])
+def get_user_events():
+    user_id = request.json.get('user_id')
+
+    events = Event.query.filter_by(owner_id=user_id).all()
+
+    serialized_events = [event.serialize() for event in events]
+    
+    return jsonify(serialized_events)
+
+# delete event
+@app.route('/delete-event', methods=['POST'])
+def delete_event():
+  user_id = request.json.get('user_id')
+  event_id = request.json.get('event_id')
+
+  event = Event.query.filter_by(owner_id=user_id, id=event_id).first()
+
+  if not event:
+    return jsonify({"error": "Event record not found"}), 404
+  
+  db.session.delete(event)
+  db.session.commit()
+
+  return jsonify({"message": "Successfully removed event"}), 200
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+  app.run(host='0.0.0.0', port=5000)

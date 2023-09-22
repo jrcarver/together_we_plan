@@ -13,3 +13,14 @@ CREATE TABLE friends (
   accepted BOOLEAN NOT NULL DEFAULT false,
   waitingOn INTEGER REFERENCES users(id)
 );
+
+CREATE TABLE events (
+  id SERIAL PRIMARY KEY,
+  owner_id INTEGER NOT NULL REFERENCES users(id),
+  user_ids INTEGER[],
+  name VARCHAR (255) NOT NULL,
+  start_time TIMESTAMP,
+  end_time TIMESTAMP,
+  location VARCHAR (255),
+  description TEXT
+);

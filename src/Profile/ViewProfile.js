@@ -39,7 +39,7 @@ export default function ViewProfile() {
         <p>Alias: </p>
         <input
           className='simple-text-input'
-          type='alias'
+          type='text'
           placeholder='Enter an alias your friends will know you by'
           value={alias}
           onChange={e => setAlias(e.target.value)}
