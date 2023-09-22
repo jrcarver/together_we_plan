@@ -1,5 +1,5 @@
 import { useEffect, useContext, useState } from "react";
-import { Auth } from "../App";
+import { Auth } from '../MainPage';
 import axios from "axios";
 import { Button } from "react-bootstrap";
 
@@ -70,14 +70,14 @@ export default function Friends(props) {
       <div>
         {friends.map((friend, friendIndex) => (
           <div className='friend' key={friendIndex}>
-            <div>{friend.name}</div>
+            <div>{friend.alias ? friend.alias : friend.name}</div>
             <Button className='accept' onClick={() => removeFriend(friend.id)} style={{'fontSize': '1em'}}>&times;</Button>
           </div>
         ))}
         {pending_friends.map((friend, friendIndex) => (
           <div className='friend' key={friendIndex}>
             <div>
-              {friend.user.name}
+              <div>{friend.user.alias ? friend.user.alias : friend.user.name}</div>
             </div>
             <div>
               {String(friend.waitingon) === String(auth.userId) ? (
@@ -87,7 +87,10 @@ export default function Friends(props) {
                   <Button className='accept' onClick={() => denyRequest(friend.user.id)} style={{'fontSize': '1em'}}>&times;</Button>
                 </div>
               ) : (
-                <div>pending</div>
+                <div style={{'display': 'flex', 'gap': '5px', 'alignItems': 'center'}}>
+                  <div>pending</div>
+                  <Button className='accept' onClick={() => denyRequest(friend.user.id)} style={{'fontSize': '1em'}}>&times;</Button>
+                </div>
               )}
             </div>
           </div>

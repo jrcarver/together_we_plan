@@ -29,6 +29,7 @@ class User(db.Model):
   token = db.Column(db.String(255), nullable=False)
   email = db.Column(db.String(255), nullable=False)
   name = db.Column(db.String(255), nullable=False)
+  alias = db.Column(db.String(255))
 
   def __init__(self, token, email, name):
     self.token = token
@@ -42,7 +43,8 @@ class User(db.Model):
     return {
       'id': self.id,
       'email': self.email,
-      'name': self.name
+      'name': self.name,
+      'alias': self.alias
     }
   
 class Friends(db.Model):
@@ -97,6 +99,25 @@ def get_user(id):
   user = User.query.filter_by(id=id).first()
 
   return jsonify(user.serialize())
+
+# create/change alias
+@app.route('/user-alias', methods=['POST'])
+def change_alias():
+  user_id = request.json.get('user_id')
+  alias = request.json.get('alias')
+
+  print(user_id)
+
+  user = User.query.filter_by(id=user_id).first()
+
+  if not user:
+    return jsonify({"message": "Couldn't find user."}), 404
+
+  user.alias = alias
+
+  db.session.commit()
+
+  return jsonify({"message": "Successfully changed alias!"}), 200
 
 # get friends
 @app.route('/get-friends', methods=['POST'])
@@ -195,6 +216,9 @@ def deny_friend():
   friend_id = request.json.get('friend_id')
 
   friendship = Friends.query.filter_by(userid=friend_id, userid2=user_id).first()
+
+  if not friendship:
+    friendship = Friends.query.filter_by(userid=user_id, userid2=friend_id).first()
 
   if not friendship:
     return jsonify({"error": "Friend record not found"}), 404
