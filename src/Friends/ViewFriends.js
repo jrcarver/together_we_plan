@@ -1,5 +1,5 @@
 import { useContext, useState } from 'react';
-import { Auth } from '../App';
+import { Auth } from '../MainPage';
 import axios from 'axios';
 import { Button } from 'react-bootstrap';
 import Friends from './Friends';
@@ -10,7 +10,8 @@ export default function ViewFriends() {
   const [counter, setCounter] = useState(0); // makes the page rerender when it changes
   const [email, setEmail] = useState('');
 
-  function addFriend() {
+  function addFriend(e) {
+    e.preventDefault();
     axios.post(`${auth.backend}/add-friend`, {
       user_id: auth.userId,
       friend_email: email
@@ -30,7 +31,7 @@ export default function ViewFriends() {
     <div className='modal-content'>
       <h2>My Friends</h2>
       <Friends rerender={counter}/>
-      <div className='input-line'>
+      <form className='input-line' onSubmit={addFriend}>
         <input
           className='simple-text-input'
           type='email'
@@ -38,10 +39,10 @@ export default function ViewFriends() {
           value={email}
           onChange={e => setEmail(e.target.value)}
         />
-        <Button className='button' onClick={addFriend}>
+        <Button className='button' type='submit'>
           Send Friend Request
         </Button>
-      </div>
+      </form>
     </div>
   );
 }

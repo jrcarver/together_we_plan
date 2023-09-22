@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { Auth } from '../App.js';
+import { Auth } from '../MainPage';
 import axios from "axios";
 
 export default function CreateEventForm() {
