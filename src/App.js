@@ -1,19 +1,19 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import MainPage from "./MainPage";
 import Cookies from 'js-cookie';
 import LoginButton from './Authentication/login';
 import LogoutButton from './Authentication/logout';
-import FriendsButton from "./Friends/FriendsButton";
 
 export const Auth = React.createContext();
 
 export default function App() {
+  const [userId, setUserId] = useState(null);
+
   useEffect(() => {
     document.title = "Together We Plan";
+    setUserId(Cookies.get('userId'));
   }, []);
-
-  const userId = Cookies.get('userId');
 
   const { user, isAuthenticated, isLoading } = useAuth0();
 
@@ -26,6 +26,11 @@ export default function App() {
   const name = user?.name;
   const email = user?.email;
 
+  function setId(user_id) {
+    Cookies.set('userId', user_id, { expires: 7 });
+    setUserId(user_id);
+  }
+
   return (
     <div className='wrapper' >
       <h1>Together We Plan</h1>
@@ -34,10 +39,7 @@ export default function App() {
           <div className='logout'>
             <LogoutButton />
           </div>
-          <div className='friends'>
-            <FriendsButton />
-          </div>
-          <MainPage />
+          <MainPage setUserId={setId} />
         </Auth.Provider>
       )}
       {!isAuthenticated && !userId && (
