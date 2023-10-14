@@ -4,13 +4,13 @@ import axios from "axios";
 import { Button } from "react-bootstrap";
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-
+import AddAttendees from "./AddAttendees";
 
 export default function CreateEventForm() {
   const auth = useContext(Auth);
 
-  const [name, setName] = useState(null);
-  const [user_ids, setUserIds] = useState('');
+  const [name, setName] = useState('');
+  const [user_ids, setUserIds] = useState([]);
   const [start_time, setStartTime] = useState(null);
   const [end_time, setEndTime] = useState(null);
   const [location, setLocation] = useState('');
@@ -35,7 +35,8 @@ export default function CreateEventForm() {
       start_time: iso_start,
       end_time: iso_end,
       location: location,
-      description: description
+      description: description,
+      user_ids: user_ids
     }
 
     axios.post(`${auth.backend}/create-event`, eventData)
@@ -45,19 +46,28 @@ export default function CreateEventForm() {
       setEndTime(null);
       setLocation('');
       setDescription('');
+      setUserIds([]);
     })
     .catch(error => {
       console.error('Error creating event:', error.response.data);
     });
   }
+  
+  function changeAttendees(attendees) {
+    var newAttendees = [];
+    for (const attendee of attendees) {
+      newAttendees = [...newAttendees, attendee.id]
+    }
+    setUserIds(newAttendees);
+  }
 
   return (
     <div className='modal-content'>
       <h2>Event Creation</h2>
-      <p className='required-line'><p className='required'>* </p> = required</p>
+      <div className='required-line'><p className='required'>* </p> = required</div>
       <form onSubmit={createEvent}>
         <div className='input-line'>
-          <p className='required-line'><div className='required'>*</div>Event name: </p>
+          <div className='required-line'><p className='required'>*</p>Event name: </div>
           <input
             className='simple-text-input'
             type='text'
@@ -66,10 +76,12 @@ export default function CreateEventForm() {
             onChange={e => setName(e.target.value)}
           />
         </div>
+        <AddAttendees change={changeAttendees} />
         <div className="input-line">
           <p>Start Time: </p>
           <ReactDatePicker
             className='simple-text-input'
+            placeholderText="Select start date and time"
             selected={start_time}
             onChange={date => setStartTime(date)}
             showTimeSelect
@@ -84,6 +96,7 @@ export default function CreateEventForm() {
           <div>
             <ReactDatePicker
               className='simple-text-input' 
+              placeholderText="Select end date and time"
               selected={end_time}
               onChange={date => setEndTime(date)}
               showTimeSelect
@@ -114,7 +127,7 @@ export default function CreateEventForm() {
             rows='5'
           />
         </div>
-        <div style={{'display': 'flex', 'justify-content': 'center'}}>
+        <div style={{'display': 'flex', 'justifyContent': 'center'}}>
           <Button className='button' type='submit'>
             Create Event
           </Button>

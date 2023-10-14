@@ -285,7 +285,7 @@ def create_event():
     start_time=start_time_converted,
     end_time=end_time_converted,
     location=data.get('location'),
-    description=data.get('description')
+    description=data.get('description'),
   )
 
   try:
@@ -301,7 +301,7 @@ def create_event():
 def get_user_events():
     user_id = request.json.get('user_id')
 
-    events = Event.query.filter_by(owner_id=user_id).all()
+    events = Event.query.filter(or_(Event.owner_id==user_id, Event.user_ids.any(user_id))).all()
 
     serialized_events = [event.serialize() for event in events]
     

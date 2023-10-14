@@ -4,7 +4,7 @@ Start by cloning this project to your computer, then follow the following instru
 
 ### Frontend Setup
 Install react
-Run from command line in base folder: npm install @auth0/auth0-react js-cookie react-bootstrap react-datepicker 
+Run from command line in base folder: npm install @auth0/auth0-react js-cookie react-bootstrap react-datepicker
   
 FYI: frontend runs on localhost:3000
 
