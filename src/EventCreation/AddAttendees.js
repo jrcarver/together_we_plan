@@ -10,13 +10,24 @@ export default function AddAttendees(props) {
   const [friends, setFriends] = useState(null);
 
   useEffect(() => {
-    axios.post(`${auth.backend}/get-friends`, {
-      user_id: auth.userId
+    Promise.all([
+      axios.post(`${auth.backend}/get-friends`, {
+        user_id: auth.userId
+      }),
+      axios.post(`${auth.backend}/get-all-users`, {})
+    ])
+    .then(responses => {
+      const [friends, users] = responses;
+      setFriends(friends.data);
+      const attendeesArray = users.data.filter(user => props.attendees.includes(user.id));
+      setAttendees(attendeesArray);
     })
-    .then(response => {
-      setFriends(response.data);
-    })
-  }, [auth.backend, auth.userId]);
+    
+    // Check if should reset
+    if (props.reset) {
+      setAttendees([props.attendees]);
+    }
+  }, [auth.backend, auth.userId, props.reset]);
 
   function addAttendee(event) {
     const email = event.target.value;
@@ -42,7 +53,7 @@ export default function AddAttendees(props) {
               Choose friends to add
             </option>
             {friends && friends.map((friend, index) => {
-              if (!attendees.includes(friend)){
+              if (!attendees.some(attendee => attendee.id === friend.id)) {
                 return (
                   <option key={index} value={friend.email}>{friend.alias ? friend.alias : friend.name}</option> 
                 );
@@ -53,10 +64,11 @@ export default function AddAttendees(props) {
       </div>
       {attendees.map((attendee, index) => {
         return (
-          <div style={{'display': 'flex', 'alignItems': 'center', 'justifyContent': 'space-between'}} key={index}>
-            <p>&nbsp;&nbsp;&nbsp;&nbsp;{attendee.alias ? attendee.alias : attendee.name}</p>
-            <Button className='accept' onClick={() => removeAttendee(attendee)} style={{'fontSize': '1em'}}>&times;</Button>
-          </div>
+          attendee.id != auth.userId && 
+            <div style={{'display': 'flex', 'alignItems': 'center', 'justifyContent': 'space-between'}} key={index}>
+              <p>&nbsp;&nbsp;&nbsp;&nbsp;{attendee.alias ? attendee.alias : attendee.name}</p>
+              <Button className='accept' onClick={() => removeAttendee(attendee)} style={{'fontSize': '1em'}}>&times;</Button>
+            </div>
         );
       })}
     </div>

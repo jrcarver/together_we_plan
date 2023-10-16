@@ -137,6 +137,13 @@ def get_user(id):
 
   return jsonify(user.serialize())
 
+# get all users
+@app.route('/get-all-users', methods = ['POST'])
+def get_all_users():
+  users = User.query.all()
+
+  return jsonify([user.serialize() for user in users])
+
 # create/change alias
 @app.route('/user-alias', methods=['POST'])
 def change_alias():
@@ -295,6 +302,52 @@ def create_event():
   except Exception as e:
     db.session.rollback()
     return jsonify({"error": f"An error occurred: {str(e)}"}), 400
+
+# edit an event
+@app.route('/edit-event', methods=['POST'])
+def edit_event():
+  data = request.get_json()
+
+  event_id = data.get('event_id')
+
+  if not event_id:
+    return jsonify({'error': 'Event ID required.'}), 400
+
+  event = Event.query.filter_by(id=event_id).first()
+
+  if not event:
+    return jsonify({'error': 'Event not found'}), 404
+
+  start_time_converted = end_time_converted = None
+  if data.get('start_time'):
+    start_time_converted = datetime.fromisoformat(data.get('start_time'))
+  if data.get('end_time'):
+    end_time_converted = datetime.fromisoformat(data.get('end_time'))
+
+  event.owner_id = data.get('owner_id')
+  event.user_ids = data.get('user_ids')
+  event.name = data.get('name')
+  event.start_time = start_time_converted
+  event.end_time = end_time_converted
+  event.location = data.get('location')
+  event.description = data.get('description')
+
+  try:
+    db.session.commit()
+    return jsonify({'message': 'Event updated successfully.'}), 200
+  except Exception as e:
+    db.session.rollback()
+    return jsonify({"error": f"An error occurred: {str(e)}"}), 400
+
+
+# get details for event
+@app.route('/get-event', methods=['POST'])
+def get_event():
+  event_id = request.json.get('event_id')
+
+  event = Event.query.filter_by(id=event_id).first()
+
+  return jsonify(event.serialize())
   
 # get user events
 @app.route('/get-events', methods=['POST'])
