@@ -1,23 +1,38 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { Auth } from '../MainPage';
 import axios from "axios";
 import { Button } from "react-bootstrap";
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import AddAttendees from "./AddAttendees";
+import AddAttendees from "../EventCreation/AddAttendees";
 
-export default function CreateEventForm() {
+export default function EditEvent(props) {
   const auth = useContext(Auth);
 
   const [name, setName] = useState('');
-  const [user_ids, setUserIds] = useState([]);
-  const [start_time, setStartTime] = useState(null);
-  const [end_time, setEndTime] = useState(null);
+  const [user_ids, setUserIds] = useState('');
+  const [start_time, setStartTime] = useState('');
+  const [end_time, setEndTime] = useState('');
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
-  const [resetAttendees, setResetAttendees] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  function createEvent(e) {
+  useEffect(() => {
+    axios.post(`${auth.backend}/get-event`, {
+      event_id: props.eventId
+    })
+    .then(response => {
+      setName(response?.data?.name || '');
+      setUserIds(response?.data?.user_ids || []);
+      setLoading(false);
+      setStartTime(response?.data?.start_time ? new Date(response.data.start_time) : null);
+      setEndTime(response?.data?.end_time ? new Date(response.data.end_time) : null);
+      setLocation(response?.data?.location || '');
+      setDescription(response?.data?.description || '');
+   });
+  }, [])
+
+  function editEvent(e) {
     e.preventDefault();
 
     var iso_start;
@@ -31,6 +46,7 @@ export default function CreateEventForm() {
     }
 
     const eventData = {
+      event_id: props.eventId,
       owner_id: auth.userId,
       name: name,
       start_time: iso_start,
@@ -40,20 +56,12 @@ export default function CreateEventForm() {
       user_ids: user_ids
     }
 
-    axios.post(`${auth.backend}/create-event`, eventData)
+    axios.post(`${auth.backend}/edit-event`, eventData)
     .then(response => {
-      setName('');
-      setUserIds([]);
-      setStartTime(null);
-      setEndTime(null);
-      setLocation('');
-      setDescription('');
-      
-      // Toggle the resetAttendees state
-      setResetAttendees(prev => !prev);
+      props.closeEditModal();
     })
     .catch(error => {
-      console.error('Error creating event:', error.response.data);
+      console.error('Error editing event:', error);
     });
   }
   
@@ -67,9 +75,9 @@ export default function CreateEventForm() {
 
   return (
     <div className='modal-content'>
-      <h2>Event Creation</h2>
+      <h2>Edit Event</h2>
       <div className='required-line'><p className='required'>* </p> = required</div>
-      <form onSubmit={createEvent}>
+      <form onSubmit={editEvent}>
         <div className='input-line'>
           <div className='required-line'><p className='required'>*</p>Event name: </div>
           <input
@@ -80,7 +88,9 @@ export default function CreateEventForm() {
             onChange={e => setName(e.target.value)}
           />
         </div>
-        <AddAttendees change={changeAttendees} attendees={[auth.userId]} reset={resetAttendees} />
+        {!loading && 
+          <AddAttendees change={changeAttendees} attendees={user_ids} />
+        }
         <div className="input-line">
           <p>Start Time: </p>
           <ReactDatePicker
@@ -133,7 +143,7 @@ export default function CreateEventForm() {
         </div>
         <div style={{'display': 'flex', 'justifyContent': 'center'}}>
           <Button className='button' type='submit'>
-            Create Event
+            Edit Event
           </Button>
         </div>
       </form>
