@@ -22,5 +22,49 @@ CREATE TABLE events (
   start_time TIMESTAMP,
   end_time TIMESTAMP,
   location VARCHAR (255),
+  description TEXT,
+  allow_time_input BOOLEAN NOT NULL DEFAULT true,
+  allow_time_voting BOOLEAN NOT NULL DEFAULT true,
+  allow_activity_input BOOLEAN NOT NULL DEFAULT true,
+  allow_activity_voting BOOLEAN NOT NULL DEFAULT true,
+  chosen_time_id INTEGER REFERENCES times(id),
+  chosen_activity_id INTEGER REFERENCES activities(id)
+);
+
+CREATE TABLE attendees (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  event_id INTEGER NOT NULL REFERENCES events(id),
+  status VARCHAR (255) NOT NULL,
+  owner BOOLEAN NOT NULL DEFAULT false
+);
+
+CREATE TABLE activities (
+  id SERIAL PRIMARY KEY,
+  event_id INTEGER NOT NULL REFERENCES events(id),
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  activity VARCHAR (255) NOT NULL,
   description TEXT
+);
+
+CREATE TABLE activity_votes (
+  id SERIAL PRIMARY KEY,
+  event_id INTEGER NOT NULL REFERENCES events(id),
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  activity_id INTEGER NOT NULL REFERENCES activities(id)
+);
+
+CREATE TABLE times (
+  id SERIAL PRIMARY KEY,
+  event_id INTEGER NOT NULL references events(id),
+  user_id INTEGER NOT NULL references users(id),
+  start_time TIMESTAMP,
+  end_time TIMESTAMP
+);
+
+CREATE TABLE time_votes (
+  id SERIAL PRIMARY KEY,
+  event_id INTEGER NOT NULL REFERENCES events(id),
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  time_id INTEGER NOT NULL REFERENCES times(id)
 );

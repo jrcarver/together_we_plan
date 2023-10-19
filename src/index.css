@@ -2,6 +2,7 @@
   --primary-color: rgb(44, 44, 44);
   --secondary-color: rgb(77, 0, 0);
   --tertiary-color: black;
+  --quaternary-color: rgb(0, 70, 3);
 }
 
 body {

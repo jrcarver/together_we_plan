@@ -81,8 +81,14 @@ class Event(db.Model):
   end_time = db.Column(db.DateTime)
   location = db.Column(db.String(255))
   description = db.Column(db.Text)
+  allow_time_input = db.Column(db.Boolean, nullable=False, default=True)
+  allow_time_voting = db.Column(db.Boolean, nullable=False, default=True)
+  allow_activity_input = db.Column(db.Boolean, nullable=False, default=True)
+  allow_activity_voting = db.Column(db.Boolean, nullable=False, default=True)
+  chosen_time_id = db.Column(db.Integer, db.ForeignKey('times.id'))
+  chosen_activity_id = db.Column(db.Integer, db.ForeignKey('activities.id'))
 
-  def __init__(self, owner_id, name, user_ids=None, start_time=None, end_time=None, location=None, description=None):
+  def __init__(self, owner_id, name, user_ids=None, start_time=None, end_time=None, location=None, description=None, allow_time_input=None, allow_time_voting=None, allow_activity_input=None, allow_activity_voting=None, chosen_time_id=None, chosen_activity_id=None):
     self.owner_id = owner_id
     self.user_ids = user_ids
     self.name = name
@@ -90,6 +96,12 @@ class Event(db.Model):
     self.end_time = end_time
     self.location = location
     self.description = description
+    self.allow_time_input = allow_time_input
+    self.allow_time_voting = allow_time_voting
+    self.allow_activity_input = allow_activity_input
+    self.allow_activity_voting = allow_activity_voting
+    self.chosen_time_id = chosen_time_id
+    self.chosen_activity_id = chosen_activity_id
     
   def __repr__(self):
     return f"<Event {self.id} - {self.name}>"
@@ -103,7 +115,126 @@ class Event(db.Model):
       'start_time': self.start_time.strftime('%Y-%m-%d %H:%M:%S') if self.start_time else None,
       'end_time': self.end_time.strftime('%Y-%m-%d %H:%M:%S') if self.end_time else None,
       'location': self.location,
+      'description': self.description,
+      'allow_time_input': self.allow_time_input,
+      'allow_time_voting': self.allow_time_voting,
+      'allow_activity_input': self.allow_activity_input,
+      'allow_activity_voting': self.allow_activity_voting,
+      'chosen_time_id': self.chosen_time_id,
+      'chosen_activity_id': self.chosen_activity_id
+    }
+
+class Attendee(db.Model):
+  __tablename__ = 'attendees'
+
+  id = db.Column(db.Integer, primary_key=True)
+  user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+  event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
+  status = db.Column(db.String(255), nullable=False)
+  owner = db.Column(db.Boolean, nullable=False, default=False)
+
+  def __init__(self, user_id, event_id, status, owner):
+    self.user_id = user_id
+    self.event_id = event_id
+    self.status = status
+    self.owner = owner
+
+  def __repr__(self):
+    return f"<Attendee {self.id}>"
+
+  def serialize(self):
+    return {
+      'id': self.id,
+      'user_id': self.user_id,
+      'event_id': self.event_id,
+      'status': self.status,
+      'owner': self.owner
+    }
+
+class Activity(db.Model):
+  __tablename__ = 'activities'
+
+  id = db.Column(db.Integer, primary_key=True)
+  event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
+  user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+  activity = db.Column(db.String(255), nullable=False)
+  description = db.Column(db.Text)
+
+  def __init__(self, event_id, user_id, activity, description):
+    self.event_id = event_id
+    self.user_id = user_id
+    self.activity = activity
+    self.description = description
+
+  def __repr__(self):
+    return f"<Activity {self.id}>"
+
+  def serialize(self):
+    return {
+      'id': self.id,
+      'event_id': self.event_id,
+      'user_id': self.user_id,
+      'activity': self.activity,
       'description': self.description
+    }
+
+class ActivityVote(db.Model):
+  __tablename__ = 'activity_votes'
+
+  id = db.Column(db.Integer, primary_key=True)
+  event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
+  user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+  activity_id = db.Column(db.Integer, db.ForeignKey('activities.id'), nullable=False)
+
+class Time(db.Model):
+  __tablename__ = 'times'
+
+  id = db.Column(db.Integer, primary_key=True)
+  event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
+  user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+  start_time = db.Column(db.DateTime, nullable=False)
+  end_time = db.Column(db.DateTime)
+
+  def __init__(self, event_id, user_id, start_time, end_time):
+    self.event_id = event_id
+    self.user_id = user_id
+    self.start_time = start_time
+    self.end_time = end_time
+
+  def __repr__(self):
+    return f"<Time {self.id}>"
+
+  def serialize(self):
+    return {
+      'id': self.id,
+      'event_id': self.event_id,
+      'user_id': self.user_id,
+      'start_time': self.start_time.strftime('%Y-%m-%d %H:%M:%S'),
+      'end_time': self.end_time.strftime('%Y-%m-%d %H:%M:%S') if self.end_time else None
+    }
+
+class TimeVote(db.Model):
+  __tablename__ = 'time_votes'
+
+  id = db.Column(db.Integer, primary_key=True)
+  event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
+  user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+  time_id = db.Column(db.Integer, db.ForeignKey('times.id'), nullable=False)
+
+  def __init__(self, event_id, user_id, time_id):
+    self.event_id = event_id
+    self.user_id = user_id
+    self.time_id = time_id
+
+  def __repr__(self):
+    return f"<TimeVote {self.id}>"
+
+  def serialize(self):
+    return {
+      'id': self.id,
+      'event_id': self.event_id,
+      'user_id': self.user_id,
+      'time_id': self.time_id
     }
 
 #
@@ -293,15 +424,40 @@ def create_event():
     end_time=end_time_converted,
     location=data.get('location'),
     description=data.get('description'),
+    allow_time_input=data.get('allow_time_input', True),
+    allow_time_voting=data.get('allow_time_voting', True),
+    allow_activity_input=data.get('allow_activity_input', True),
+    allow_activity_voting=data.get('allow_activity_voting', True),
+    chosen_time_id=data.get('chosen_time_id', None),
+    chosen_activity_id=data.get('chosen_activity_id', None)
   )
 
   try:
     db.session.add(new_event)
     db.session.commit()
-    return jsonify({"message": "Event created successfully!", "event_id": new_event.id}), 201
+
   except Exception as e:
     db.session.rollback()
     return jsonify({"error": f"An error occurred: {str(e)}"}), 400
+
+  for id in data.get('user_ids'):
+    new_attendee = Attendee(
+      user_id=id,
+      event_id=new_event.id,
+      status='yes' if id == data.get('owner_id') else 'pending',
+      owner=True if id == data.get('owner_id') else False
+    )
+
+    try:
+      db.session.add(new_attendee)
+      db.session.commit()
+    
+    except Exception as e:
+      db.session.rollback()
+      return jsonify({"error": f"An error occurred: {str(e)}"}), 400
+
+  return jsonify({'message': 'Event and attendees created successfully.', 'event_id': new_event.id}), 201
+
 
 # edit an event
 @app.route('/edit-event', methods=['POST'])
@@ -331,6 +487,31 @@ def edit_event():
   event.end_time = end_time_converted
   event.location = data.get('location')
   event.description = data.get('description')
+
+  attendees = Attendee.query.filter_by(event_id=event_id).all()
+
+  for attendee in attendees:
+    if attendee.user_id not in data.get('user_ids'):
+      db.session.delete(attendee)
+  
+  atendee_ids = [attendee.user_id for attendee in attendees]
+
+  for id in data.get('user_ids'):
+    if id not in atendee_ids:
+      new_attendee = Attendee(
+        user_id=id,
+        event_id=event_id,
+        status='pending',
+        owner=False
+      )
+
+      try:
+        db.session.add(new_attendee)
+        db.session.commit()
+      
+      except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 400
 
   try:
     db.session.commit()
@@ -371,10 +552,77 @@ def delete_event():
   if not event:
     return jsonify({"error": "Event record not found"}), 404
   
-  db.session.delete(event)
-  db.session.commit()
+  try:
+    # delete attendees
+    attendees = Attendee.query.filter_by(event_id=event_id).all()
+    for attendee in attendees:
+      db.session.delete(attendee)
+
+    # delete event
+    db.session.delete(event)
+
+    db.session.commit()
+
+  except Exception as e:
+    db.session.rollback()
+    return jsonify({"error": f"An error occurred during deletion: {str(e)}"}), 400
 
   return jsonify({"message": "Successfully removed event"}), 200
+
+# get user attendances
+@app.route('/get-user-attendance', methods=['POST'])
+def get_user_attendances():
+  data = request.get_json()
+
+  user_id = data.get('user_id')
+  event_id = data.get('event_id')
+
+  attendee = Attendee.query.filter_by(user_id=user_id, event_id=event_id).first()
+
+  if not attendee:
+    return jsonify({'error': 'Attendee not found.'}), 400
+
+  return {'status': attendee.status}, 200
+
+# get attendees
+@app.route('/get-attendees', methods=['POST'])
+def get_attendees():
+  data = request.get_json()
+
+  user_id = data.get('user_id')
+
+  attendees = Attendee.query.all()
+
+  if not attendees:
+    return jsonify({'error': 'Attendee not found.'}), 400
+
+  serialized_attendees = [attendee.serialize() for attendee in attendees]
+
+  return jsonify(serialized_attendees)
+
+# change attendee status
+@app.route('/change-attendee-status', methods=['POST'])
+def change_attendee_status():
+  data = request.get_json()
+
+  user_id = data.get('user_id')
+  event_id = data.get('event_id')
+  status = data.get('status')
+
+  attendee = Attendee.query.filter_by(user_id=user_id, event_id=event_id).first()
+
+  if not attendee:
+    return jsonify({'error': 'Attendee not found.'}), 400
+
+  attendee.status = status
+  
+  try:
+    db.session.commit()
+    return jsonify({'message': 'Attendee status updated successfully.'})
+  
+  except Exception as e:
+    db.session.rollback()
+    return jsonify({'error': f'An error occured: {str(e)}'}), 400
 
 if __name__ == '__main__':
   app.run(host='0.0.0.0', port=5000)
