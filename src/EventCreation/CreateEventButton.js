@@ -20,7 +20,7 @@ export default function CreateEventButton() {
       <Button className='button' onClick={() => showForm()}>Plan an Event</Button>
       {displayForm && (
         <div className='modal' onClick={clickOutside}>
-          <CreateEventForm />
+          <CreateEventForm closeForm={showForm} />
         </div>
       )}
     </div>

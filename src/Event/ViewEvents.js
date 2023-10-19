@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Auth } from '../MainPage';
 import { Button } from 'react-bootstrap';
 import EditEvent from './EditEvent';
+import RSVP from './RSVP';
 
 export default function ViewEvents(props) {
   const auth = useContext(Auth);
@@ -22,10 +23,19 @@ export default function ViewEvents(props) {
       axios.post(`${auth.backend}/get-friends`, {
         user_id: auth.userId
       }),
-      axios.post(`${auth.backend}/get-all-users`, {})
+      axios.post(`${auth.backend}/get-all-users`, {}),
+      axios.post(`${auth.backend}/get-attendees`, {
+        user_id: auth.userId
+      })
     ])
     .then(responses => {
-      const [events, friends, users] = responses;
+      const [events, friends, users, attendees] = responses;
+      
+      for (const event of events.data) {
+        const event_attendees = attendees.data.filter((attendee) => attendee.event_id === event.id);
+        event['attendees'] = event_attendees;
+      }
+
       setEvents(events.data);
       setFriends(friends.data);
       setUsers(users.data);
@@ -87,22 +97,38 @@ export default function ViewEvents(props) {
                   </div>
                 }
               </div>
-              <p>Attendees:</p>
-              {event.user_ids.map((user_id, event_index) => {
-                if (user_id === auth.userId) {
-                  return null; // skip
-                }
+              {Object.keys(event.user_ids).length > 1 &&
+                <div>
+                  <p>Attendees:</p>
+                  {event.attendees.map((attendee, attendee_index) => {
+                    if (attendee.user_id === auth.userId) {
+                      return null; // skip
+                    }
 
-                return(
-                  <div key={event_index}>
-                    <p>&nbsp;&nbsp;&nbsp;&nbsp;{getFriend(user_id)}</p>
-                  </div>
-                )
-              })}
-              <p>Start Time: {event.start_time}</p>
-              <p>End Time: {event.end_time}</p>
-              <p>Location: {event.location}</p>
-              <p>Description: {event.description}</p>
+                    return(
+                      <div className='input-line' key={attendee_index} style={{'justifyContent': 'space-between'}}>
+                        <p>&nbsp;&nbsp;&nbsp;&nbsp;{getFriend(attendee.user_id)}</p>
+                        <p>{attendee.status}</p>
+                      </div>
+                    )
+                  })}
+                </div>
+              }
+              {event.start_time &&
+                <p>Start Time: {event.start_time}</p>
+              }
+              {event.end_time &&
+                <p>End Time: {event.end_time}</p>
+              }
+              {event.location &&
+                <p>Location: {event.location}</p>
+              }
+              {event.description &&
+                <p>Description: {event.description}</p>
+              }
+              {event.owner_id !== auth.userId &&
+                <RSVP event_id={event.id}/>
+              }
             </div>
           ))}
         </div>

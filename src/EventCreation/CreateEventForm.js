@@ -5,17 +5,23 @@ import { Button } from "react-bootstrap";
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import AddAttendees from "./AddAttendees";
+import AddActivities from "../Activities/AddActivities";
 
-export default function CreateEventForm() {
+export default function CreateEventForm(props) {
   const auth = useContext(Auth);
 
   const [name, setName] = useState('');
-  const [user_ids, setUserIds] = useState([]);
+  const [user_ids, setUserIds] = useState([auth.userId]);
   const [start_time, setStartTime] = useState(null);
   const [end_time, setEndTime] = useState(null);
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
   const [resetAttendees, setResetAttendees] = useState(false);
+  const [timeInput, setTimeInput] = useState(true);
+  const [timeVoting, setTimeVoting] = useState(true);
+  const [activityInput, setActivityInput] = useState(true);
+  const [activityVoting, setActivityVoting] = useState(true);
+  const [activities, setActivities] = useState([]);
 
   function createEvent(e) {
     e.preventDefault();
@@ -32,18 +38,22 @@ export default function CreateEventForm() {
 
     const eventData = {
       owner_id: auth.userId,
+      user_ids: user_ids,
       name: name,
       start_time: iso_start,
       end_time: iso_end,
       location: location,
       description: description,
-      user_ids: user_ids
+      allow_time_input: timeInput,
+      allow_time_voting: timeVoting,
+      allow_activity_input: activityInput,
+      allow_activity_voting: activityVoting
     }
 
     axios.post(`${auth.backend}/create-event`, eventData)
     .then(response => {
       setName('');
-      setUserIds([]);
+      setUserIds([auth.userId]);
       setStartTime(null);
       setEndTime(null);
       setLocation('');
@@ -51,18 +61,40 @@ export default function CreateEventForm() {
       
       // Toggle the resetAttendees state
       setResetAttendees(prev => !prev);
+
+      props.closeForm();
     })
     .catch(error => {
-      console.error('Error creating event:', error.response.data);
+      console.error('Error creating event:', error);
     });
   }
   
   function changeAttendees(attendees) {
     var newAttendees = [];
     for (const attendee of attendees) {
-      newAttendees = [...newAttendees, attendee.id]
+      newAttendees = [...newAttendees, attendee.id];
     }
     setUserIds(newAttendees);
+  }
+
+  function changeActivities(new_activity) {
+    setActivities([...activities, new_activity]);
+  }
+
+  function toggleTimeInput(event) {
+    setTimeInput(event.target.checked);
+  }
+
+  function toggleTimeVoting(event) {
+    setTimeVoting(event.target.checked);
+  }
+
+  function toggleActivityInput(event) {
+    setActivityInput(event.target.checked);
+  }
+
+  function toggleActivityVoting(event) {
+    setActivityVoting(event.target.checked);
   }
 
   return (
@@ -80,7 +112,23 @@ export default function CreateEventForm() {
             onChange={e => setName(e.target.value)}
           />
         </div>
-        <AddAttendees change={changeAttendees} attendees={[auth.userId]} reset={resetAttendees} />
+        <AddAttendees change={changeAttendees} attendees={user_ids} reset={resetAttendees} />
+        <div className='input-line'>
+          <input
+            type='checkbox'
+            checked={timeInput}
+            onChange={toggleTimeInput}
+          />
+          Allow user input on times
+        </div>
+        <div className='input-line'>
+          <input
+            type='checkbox'
+            checked={timeVoting}
+            onChange={toggleTimeVoting}
+          />
+          Allow user voting on times
+        </div>
         <div className="input-line">
           <p>Start Time: </p>
           <ReactDatePicker
@@ -131,6 +179,23 @@ export default function CreateEventForm() {
             rows='5'
           />
         </div>
+        <div className='input-line'>
+          <input
+            type='checkbox'
+            checked={activityInput}
+            onChange={toggleActivityInput}
+          />
+          Allow user input on activities
+        </div>
+        <div className='input-line'>
+          <input
+            type='checkbox'
+            checked={activityVoting}
+            onChange={toggleActivityVoting}
+          />
+          Allow user voting on activities
+        </div>
+        <AddActivities change={changeActivities} />
         <div style={{'display': 'flex', 'justifyContent': 'center'}}>
           <Button className='button' type='submit'>
             Create Event
