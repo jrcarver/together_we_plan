@@ -6,6 +6,7 @@ import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import AddAttendees from "./AddAttendees";
 import AddActivities from "../Activities/AddActivities";
+import AddTimes from "../Times/AddTimes";
 
 export default function CreateEventForm(props) {
   const auth = useContext(Auth);
@@ -14,6 +15,7 @@ export default function CreateEventForm(props) {
   const [user_ids, setUserIds] = useState([auth.userId]);
   const [start_time, setStartTime] = useState(null);
   const [end_time, setEndTime] = useState(null);
+  const [times, setTimes] = useState([]);
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
   const [resetAttendees, setResetAttendees] = useState(false);
@@ -26,28 +28,30 @@ export default function CreateEventForm(props) {
   function createEvent(e) {
     e.preventDefault();
 
-    var iso_start;
-    var iso_end;
+    // var iso_start;
+    // var iso_end;
 
-    if (start_time) {
-      iso_start = start_time.toISOString();
-    }
-    if (end_time) {
-      iso_end = end_time.toISOString();
-    }
+    // if (start_time) {
+    //   iso_start = start_time.toISOString();
+    // }
+    // if (end_time) {
+    //   iso_end = end_time.toISOString();
+    // }
 
     const eventData = {
       owner_id: auth.userId,
       user_ids: user_ids,
       name: name,
-      start_time: iso_start,
-      end_time: iso_end,
+      start_time: null,
+      end_time: null,
       location: location,
       description: description,
       allow_time_input: timeInput,
       allow_time_voting: timeVoting,
       allow_activity_input: activityInput,
-      allow_activity_voting: activityVoting
+      allow_activity_voting: activityVoting,
+      activities: activities,
+      times: times
     }
 
     axios.post(`${auth.backend}/create-event`, eventData)
@@ -79,6 +83,18 @@ export default function CreateEventForm(props) {
 
   function changeActivities(new_activity) {
     setActivities([...activities, new_activity]);
+  }
+
+  function removeActivity(activity) {
+    setActivities(activities.filter(currentActivity => currentActivity !== activity));
+  }
+
+  function changeTimes(new_time) {
+    setTimes([...times, new_time])
+  }
+
+  function removeTime(time) {
+    setTimes(times.filter(currentTime => currentTime !== time));
   }
 
   function toggleTimeInput(event) {
@@ -129,36 +145,7 @@ export default function CreateEventForm(props) {
           />
           Allow user voting on times
         </div>
-        <div className="input-line">
-          <p>Start Time: </p>
-          <ReactDatePicker
-            className='simple-text-input'
-            placeholderText="Select start date and time"
-            selected={start_time}
-            onChange={date => setStartTime(date)}
-            showTimeSelect
-            timeFormat="HH:mm"
-            timeIntervals={15}
-            timeCaption="time"
-            dateFormat="MMMM d, yyyy h:mm aa"
-          />
-        </div>
-        <div className="input-line">
-          <p>End Time: </p>
-          <div>
-            <ReactDatePicker
-              className='simple-text-input' 
-              placeholderText="Select end date and time"
-              selected={end_time}
-              onChange={date => setEndTime(date)}
-              showTimeSelect
-              timeFormat="HH:mm"
-              timeIntervals={15}
-              timeCaption="time"
-              dateFormat="MMMM d, yyyy h:mm aa"
-            />
-          </div>
-        </div>
+        <AddTimes addTime={changeTimes} removeTime={removeTime} />
         <div className="input-line">
           <p>Location: </p>
           <input
@@ -170,9 +157,10 @@ export default function CreateEventForm(props) {
           />
         </div>
         <div style={{'display': 'flex', 'flexDirection': 'column'}}>
-          <p>Description: </p>
+          <p style={{'marginBottom': '5px'}}>Description: </p>
           <textarea
             className='text-area'
+            style={{'margin': '5px'}}
             placeholder='Event description'
             value={description}
             onChange={e => setDescription(e.target.value)}
@@ -195,7 +183,7 @@ export default function CreateEventForm(props) {
           />
           Allow user voting on activities
         </div>
-        <AddActivities change={changeActivities} />
+        <AddActivities addActivity={changeActivities} removeActivity={removeActivity} />
         <div style={{'display': 'flex', 'justifyContent': 'center'}}>
           <Button className='button' type='submit'>
             Create Event

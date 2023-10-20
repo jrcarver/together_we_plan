@@ -4,6 +4,8 @@ import { Auth } from '../MainPage';
 import { Button } from 'react-bootstrap';
 import EditEvent from './EditEvent';
 import RSVP from './RSVP';
+import ViewActivities from '../Activities/ViewActivities';
+import ViewTimes from '../Times/ViewTimes';
 
 export default function ViewEvents(props) {
   const auth = useContext(Auth);
@@ -30,7 +32,7 @@ export default function ViewEvents(props) {
     ])
     .then(responses => {
       const [events, friends, users, attendees] = responses;
-      
+
       for (const event of events.data) {
         const event_attendees = attendees.data.filter((attendee) => attendee.event_id === event.id);
         event['attendees'] = event_attendees;
@@ -114,18 +116,14 @@ export default function ViewEvents(props) {
                   })}
                 </div>
               }
-              {event.start_time &&
-                <p>Start Time: {event.start_time}</p>
-              }
-              {event.end_time &&
-                <p>End Time: {event.end_time}</p>
-              }
+              <ViewTimes event_id={event.id} allow_time_input={event.allow_time_input} allow_time_voting={event.allow_time_voting}/>
               {event.location &&
                 <p>Location: {event.location}</p>
               }
               {event.description &&
                 <p>Description: {event.description}</p>
               }
+              <ViewActivities event_id={event.id} allow_activity_input={event.allow_activity_input} allow_activity_voting={event.allow_activity_voting}/>
               {event.owner_id !== auth.userId &&
                 <RSVP event_id={event.id}/>
               }
