@@ -38,9 +38,11 @@ export default function RSVP(props) {
   return (
     <div className='input-line'>
       <p>RSVP:</p>
-      <Button className='accept' style={status=='yes' ? {'backgroundColor': quaternary_color} : {}} onClick={() => changeStatus('yes')}>Yes</Button>
-      <Button className='accept' style={status=='maybe' ? {'backgroundColor': quaternary_color} : {}} onClick={() => changeStatus('maybe')}>Maybe</Button>
-      <Button className='accept' style={status=='no' ? {'backgroundColor': quaternary_color} : {}} onClick={() => changeStatus('no')}>No</Button>
+      <div style={{'display': 'flex', 'width': '100%', 'justifyContent': 'space-between'}}>
+        <Button className='button' style={status=='yes' ? {'backgroundColor': quaternary_color} : {}} onClick={() => changeStatus('yes')}>Yes</Button>
+        <Button className='button' style={status=='maybe' ? {'backgroundColor': quaternary_color} : {}} onClick={() => changeStatus('maybe')}>Maybe</Button>
+        <Button className='button' style={status=='no' ? {'backgroundColor': quaternary_color} : {}} onClick={() => changeStatus('no')}>No</Button>
+      </div>
     </div>
   );
 }

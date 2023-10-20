@@ -4,9 +4,12 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from sqlalchemy import or_
 from datetime import datetime
+import logging
 
 app = Flask(__name__)
 CORS(app)
+
+logging.basicConfig(level=logging.INFO)
 
 #
 # DATABASE CONFIG
@@ -185,6 +188,22 @@ class ActivityVote(db.Model):
   event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
   user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
   activity_id = db.Column(db.Integer, db.ForeignKey('activities.id'), nullable=False)
+
+  def __init__(self, event_id, user_id, activity_id):
+    self.event_id = event_id
+    self.user_id = user_id
+    self.activity_id = activity_id
+
+  def __repr__(self):
+    return f"<ActivityVote {self.id}>"
+  
+  def serialize(self):
+    return {
+      'id': self.id,
+      'event_id': self.event_id,
+      'user_id': self.user_id,
+      'activity_id': self.activity_id
+    }
 
 class Time(db.Model):
   __tablename__ = 'times'
@@ -417,9 +436,9 @@ def create_event():
     end_time_converted = datetime.fromisoformat(data.get('end_time'))
 
   new_event = Event(
-    owner_id=data['owner_id'],
+    owner_id=data.get('owner_id'),
     user_ids=data.get('user_ids', []),
-    name=data['name'],
+    name=data.get('name'),
     start_time=start_time_converted,
     end_time=end_time_converted,
     location=data.get('location'),
@@ -428,8 +447,8 @@ def create_event():
     allow_time_voting=data.get('allow_time_voting', True),
     allow_activity_input=data.get('allow_activity_input', True),
     allow_activity_voting=data.get('allow_activity_voting', True),
-    chosen_time_id=data.get('chosen_time_id', None),
-    chosen_activity_id=data.get('chosen_activity_id', None)
+    chosen_time_id=None,
+    chosen_activity_id=None
   )
 
   try:
@@ -440,7 +459,7 @@ def create_event():
     db.session.rollback()
     return jsonify({"error": f"An error occurred: {str(e)}"}), 400
 
-  for id in data.get('user_ids'):
+  for id in data.get('user_ids', []):
     new_attendee = Attendee(
       user_id=id,
       event_id=new_event.id,
@@ -450,6 +469,38 @@ def create_event():
 
     try:
       db.session.add(new_attendee)
+      db.session.commit()
+    
+    except Exception as e:
+      db.session.rollback()
+      return jsonify({"error": f"An error occurred: {str(e)}"}), 400
+
+  for activity in data.get('activities', []):
+    new_activity = Activity(
+      event_id=new_event.id,
+      user_id=data.get('owner_id'),
+      activity=activity.get('activity'),
+      description=activity.get('description')
+    )
+
+    try:
+      db.session.add(new_activity)
+      db.session.commit()
+    
+    except Exception as e:
+      db.session.rollback()
+      return jsonify({"error": f"An error occurred: {str(e)}"}), 400
+
+  for time in data.get('times', []):
+    new_time = Time(
+      event_id=new_event.id,
+      user_id=data.get('owner_id'),
+      start_time=datetime.fromisoformat(time.get('start_time')),
+      end_time=datetime.fromisoformat(time.get('end_time')) if time.get('end_time') else None
+    )
+
+    try:
+      db.session.add(new_time)
       db.session.commit()
     
     except Exception as e:
@@ -487,6 +538,10 @@ def edit_event():
   event.end_time = end_time_converted
   event.location = data.get('location')
   event.description = data.get('description')
+  event.allow_time_input = data.get('allow_time_input')
+  event.allow_time_voting = data.get('allow_time_voting')
+  event.allow_activity_input = data.get('allow_activity_input')
+  event.allow_activity_voting = data.get('allow_activity_voting')
 
   attendees = Attendee.query.filter_by(event_id=event_id).all()
 
@@ -507,6 +562,58 @@ def edit_event():
 
       try:
         db.session.add(new_attendee)
+        db.session.commit()
+      
+      except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 400
+
+  activities = Activity.query.filter_by(event_id=event_id).all()
+  currentActivityIds = [activity.get('id') for activity in data.get('activities', [])]
+
+  for activity in activities:
+    if activity.id not in currentActivityIds:
+      db.session.delete(activity)
+
+  activity_ids = [activity.id for activity in activities]
+
+  for activity in data.get('activities', []):
+    if not activity.get('id'):
+      new_activity = Activity(
+        event_id=event_id,
+        user_id=data.get('owner_id'),
+        activity=activity.get('activity'),
+        description=activity.get('description')
+      )
+
+      try:
+        db.session.add(new_activity)
+        db.session.commit()
+      
+      except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 400
+  
+  times = Time.query.filter_by(event_id=event_id).all()
+  currentTimeIds = [time.get('id') for time in data.get('times', [])]
+
+  for time in times:
+    if time.id not in currentTimeIds:
+      db.session.delete(time)
+  
+  time_ids = [time.id for time in times]
+
+  for time in data.get('times', []):
+    if not time.get('id'):
+      new_time = Time(
+        event_id=event_id,
+        user_id=data.get('owner_id'),
+        start_time=datetime.fromisoformat(time.get('start_time')),
+        end_time=datetime.fromisoformat(time.get('end_time')) if time.get('end_time') else None
+      )
+
+      try:
+        db.session.add(new_time)
         db.session.commit()
       
       except Exception as e:
@@ -537,9 +644,12 @@ def get_user_events():
 
     events = Event.query.filter(or_(Event.owner_id==user_id, Event.user_ids.any(user_id))).all()
 
+    if not events:
+      return jsonify([]), 200
+
     serialized_events = [event.serialize() for event in events]
     
-    return jsonify(serialized_events)
+    return jsonify(serialized_events), 200
 
 # delete event
 @app.route('/delete-event', methods=['POST'])
@@ -553,10 +663,43 @@ def delete_event():
     return jsonify({"error": "Event record not found"}), 404
   
   try:
+    # delete activity votes
+    activity_votes = ActivityVote.query.filter_by(event_id=event_id).all()
+    for activity_vote in activity_votes:
+      db.session.delete(activity_vote)
+
+    db.session.commit()
+
+    # delete time votes
+    time_votes = TimeVote.query.filter_by(event_id=event_id).all()
+    for time_vote in time_votes:
+      db.session.delete(time_vote)
+
+    db.session.commit()
+
     # delete attendees
     attendees = Attendee.query.filter_by(event_id=event_id).all()
     for attendee in attendees:
       db.session.delete(attendee)
+
+    db.session.commit()
+
+    # delete activities
+    activities = Activity.query.filter_by(event_id=event_id).all()
+    for activity in activities:
+      app.logger.info(activity)
+      db.session.delete(activity)
+
+    db.session.commit()
+
+    # delete times
+    times = Time.query.filter_by(event_id=event_id).all()
+    app.logger.info(times)
+    for time in times:
+      app.logger.info(time)
+      db.session.delete(time)
+    
+    db.session.commit()
 
     # delete event
     db.session.delete(event)
@@ -594,7 +737,7 @@ def get_attendees():
   attendees = Attendee.query.all()
 
   if not attendees:
-    return jsonify({'error': 'Attendee not found.'}), 400
+    return jsonify({}), 200
 
   serialized_attendees = [attendee.serialize() for attendee in attendees]
 
@@ -623,6 +766,228 @@ def change_attendee_status():
   except Exception as e:
     db.session.rollback()
     return jsonify({'error': f'An error occured: {str(e)}'}), 400
+
+# get activities
+@app.route('/get-activities', methods=['POST'])
+def get_activities():
+  data = request.get_json()
+
+  event_id = data.get('event_id')
+
+  activities = Activity.query.filter_by(event_id=event_id).all()
+
+  if activities:
+    serialized_activities = [activity.serialize() for activity in activities]
+
+    return jsonify(serialized_activities)
+
+  else:
+    return jsonify([])
+
+# add an activity
+@app.route('/add-activity', methods=['POST'])
+def add_activity():
+  data = request.get_json()
+
+  event_id = data.get('event_id')
+  user_id = data.get('user_id')
+  activity = data.get('activity')
+  description = data.get('description')
+
+  new_activity = Activity(
+    event_id=event_id,
+    user_id=user_id,
+    activity=activity,
+    description=description
+  )
+
+  try:
+    db.session.add(new_activity)
+    db.session.commit()
+    return jsonify(new_activity.serialize()), 200
+  
+  except Exception as e:
+    db.session.rollback()
+    return jsonify({'error': f'An error occured: {str(e)}'}), 400
+
+# delete an activity
+@app.route('/delete-activity', methods=['POST'])
+def delete_activity():
+  data = request.get_json()
+
+  activity_id = data.get('activity_id')
+
+  # delete activity votes
+  activity_votes = ActivityVote.query.filter_by(activity_id=activity_id).all()
+  for activity_vote in activity_votes:
+    db.session.delete(activity_vote)
+
+  activity = Activity.query.filter_by(id=activity_id).first()
+
+  if not activity:
+    return jsonify({'error': 'Activity not found.'}), 400
+  
+  try:
+    db.session.delete(activity)
+    db.session.commit()
+    return jsonify({'message': 'Activity deleted successfully.'}), 200
+
+  except Exception as e:
+    db.session.rollback()
+    return jsonify({'error': f'An error occured: {str(e)}'}), 400
+
+# add an activity vote
+@app.route('/add-activity-vote', methods=['POST'])
+def add_activity_vote():
+  data = request.get_json()
+
+  event_id = data.get('event_id')
+  user_id = data.get('user_id')
+  activity_id = data.get('activity_id')
+
+  new_activity_vote = ActivityVote(
+    event_id=event_id,
+    user_id=user_id,
+    activity_id=activity_id
+  )
+
+  try:
+    db.session.add(new_activity_vote)
+    db.session.commit()
+    return jsonify(new_activity_vote.serialize()), 200
+
+  except Exception as e:
+    db.session.rollback()
+    return jsonify({'error': f'An error occured: {str(e)}'}), 400
+
+# get activity votes
+@app.route('/get-activity-votes', methods=['POST'])
+def get_activity_votes():
+  data = request.get_json()
+
+  event_id = data.get('event_id')
+
+  activity_votes = ActivityVote.query.filter_by(event_id=event_id).all()
+
+  if activity_votes:
+    serialized_activity_votes = [activity_vote.serialize() for activity_vote in activity_votes]
+
+    return jsonify(serialized_activity_votes)
+
+  else:
+    return jsonify([])
+
+# get times
+@app.route('/get-times', methods=['POST'])
+def get_times():
+  data = request.get_json()
+
+  event_id = data.get('event_id')
+
+  times = Time.query.filter_by(event_id=event_id).all()
+
+  if times:
+    serialized_times = [time.serialize() for time in times]
+
+    return jsonify(serialized_times)
+
+  else:
+    return jsonify([])
+
+# add a time
+@app.route('/add-time', methods=['POST'])
+def add_time():
+  data = request.get_json()
+
+  event_id = data.get('event_id')
+  user_id = data.get('user_id')
+  start_time = datetime.fromisoformat(data.get('start_time'))
+  end_time = datetime.fromisoformat(data.get('end_time')) if data.get('end_time') else None
+
+  new_time = Time(
+    event_id=event_id,
+    user_id=user_id,
+    start_time=start_time,
+    end_time=end_time
+  )
+
+  try:
+    db.session.add(new_time)
+    db.session.commit()
+    return jsonify(new_time.serialize()), 200
+  
+  except Exception as e:
+    db.session.rollback()
+    return jsonify({'error': f'An error occured: {str(e)}'}), 400
+
+# delete a time
+@app.route('/delete-time', methods=['POST'])
+def delete_time():
+  data = request.get_json()
+
+  time_id = data.get('time_id')
+
+  # delete time votes
+  time_votes = TimeVote.query.filter_by(time_id=time_id).all()
+  for time_vote in time_votes:
+    db.session.delete(time_vote)
+
+  db.session.commit()
+
+  time = Time.query.filter_by(id=time_id).first()
+
+  if not time:
+    return jsonify({'error': 'Time not found.'}), 400
+  
+  try:
+    db.session.delete(time)
+    db.session.commit()
+    return jsonify({'message': 'Time deleted successfully.'}), 200
+
+  except Exception as e:
+    db.session.rollback()
+    return jsonify({'error': f'An error occured: {str(e)}'}), 400
+
+# add a time vote
+@app.route('/add-time-vote', methods=['POST'])
+def add_time_vote():
+  data = request.get_json()
+
+  event_id = data.get('event_id')
+  user_id = data.get('user_id')
+  time_id = data.get('time_id')
+
+  new_time_vote = TimeVote(
+    event_id=event_id,
+    user_id=user_id,
+    time_id=time_id
+  )
+
+  try:
+    db.session.add(new_time_vote)
+    db.session.commit()
+    return jsonify(new_time_vote.serialize()), 200
+
+  except Exception as e:
+    db.session.rollback()
+    return jsonify({'error': f'An error occured: {str(e)}'}), 400
+
+# get time votes
+@app.route('/get-time-votes', methods=['POST'])
+def get_time_votes():
+  data = request.get_json()
+
+  event_id = data.get('event_id')
+
+  time_votes = TimeVote.query.filter_by(event_id=event_id).all()
+
+  if time_votes:
+    serialized_time_votes = [time_vote.serialize() for time_vote in time_votes]
+
+    return jsonify(serialized_time_votes)
+
+  else:
+    return jsonify([])
 
 if __name__ == '__main__':
   app.run(host='0.0.0.0', port=5000)

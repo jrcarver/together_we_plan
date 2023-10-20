@@ -138,3 +138,9 @@ body {
   max-height: 90%;
   overflow-y: auto;
 }
+
+.vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
