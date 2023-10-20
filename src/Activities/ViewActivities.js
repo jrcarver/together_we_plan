@@ -58,6 +58,14 @@ export default function ViewActivities(props) {
     .catch((error) => console.error("Error deleting activity: ", error));
   }
 
+  function vote(activity) {
+    if (votes.some(vote => vote.activity_id === activity.id && vote.user_id === auth.userId)) {
+      removeVote(activity);
+    } else {
+      addVote(activity);
+    }
+  }
+
   function addVote(activity) {
     axios.post(`${auth.backend}/add-activity-vote`, {
       activity_id: activity.id,
@@ -68,6 +76,18 @@ export default function ViewActivities(props) {
       setVotes([...votes, response.data]);
     })
     .catch((error) => console.error("Error adding vote: ", error));
+  }
+
+  function removeVote(activity) {
+    axios.post(`${auth.backend}/remove-activity-vote`, {
+      activity_id: activity.id,
+      user_id: auth.userId,
+      event_id: props.event_id
+    })
+    .then((response) => {
+      setVotes(votes.filter(vote => vote.activity_id != activity.id || vote.user_id != auth.userId));
+    })
+    .catch((error) => console.error("Error deleting vote: ", error));
   }
 
   return (
@@ -86,15 +106,14 @@ export default function ViewActivities(props) {
                         <p>{votes.filter(item => item.activity_id === activity.id).length}</p>
                         <Button 
                           className='accept' 
-                          onClick={() => addVote(activity)} 
+                          onClick={() => vote(activity)} 
                           style={{'fontSize': '0.9em', 'margin': '5px', 'backgroundColor': votes.some(vote => vote.activity_id === activity.id && vote.user_id === auth.userId) ? 'rgb(0, 70, 3)' : ''}}
-                          disabled={votes.some(vote => vote.activity_id === activity.id && vote.user_id === auth.userId)}
                         >
                           &#9733;
                         </Button>
                       </div>
                     }
-                    {activity.user_id == auth.userId &&
+                    {activity.user_id == auth.userId && props.allow_activity_input &&
                       <Button className='accept' onClick={() => deleteActivity(activity)} style={{'fontSize': '1em'}}>
                         &times;
                       </Button>
