@@ -60,6 +60,14 @@ export default function ViewTimes(props) {
     .catch((error) => console.error("Error deleting time: ", error));
   }
 
+  function vote(time) {
+    if (votes.some(vote => vote.time_id === time.id && vote.user_id === auth.userId)) {
+      removeVote(time);
+    } else {
+      addVote(time);
+    }
+  }
+
   function addVote(time) {
     axios.post(`${auth.backend}/add-time-vote`, {
       time_id: time.id,
@@ -70,6 +78,18 @@ export default function ViewTimes(props) {
       setVotes([...votes, response.data]);
     })
     .catch((error) => console.error("Error adding vote: ", error));
+  }
+
+  function removeVote(time) {
+    axios.post(`${auth.backend}/remove-time-vote`, {
+      time_id: time.id,
+      user_id: auth.userId,
+      event_id: props.event_id
+    })
+    .then((response) => {
+      setVotes(votes.filter(currentVote => currentVote.time_id !== time.id));
+    })
+    .catch((error) => console.error("Error removing vote: ", error));
   }
 
   return (
@@ -87,15 +107,14 @@ export default function ViewTimes(props) {
                       <p>{votes.filter(item => item.time_id === time.id).length}</p>
                       <Button 
                         className='accept' 
-                        onClick={() => addVote(time)} 
+                        onClick={() => vote(time)} 
                         style={{'fontSize': '0.9em', 'margin': '5px', 'backgroundColor': votes.some(vote => vote.time_id === time.id && vote.user_id === auth.userId) ? 'rgb(0, 70, 3)' : ''}}
-                        disabled={votes.some(vote => vote.time_id === time.id && vote.user_id === auth.userId)}
                       >
                         &#9733;
                       </Button>
                     </div>
                   }
-                  {time.user_id == auth.userId &&
+                  {time.user_id == auth.userId && props.allow_time_input &&
                     <Button className='accept' onClick={() => deleteTime(time)} style={{'fontSize': '1em'}}>&times;</Button>
                   }
                 </div>

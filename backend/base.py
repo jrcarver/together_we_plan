@@ -860,6 +860,29 @@ def add_activity_vote():
     db.session.rollback()
     return jsonify({'error': f'An error occured: {str(e)}'}), 400
 
+# remove an activity vote
+@app.route('/remove-activity-vote', methods=['POST'])
+def remove_activity_vote():
+  data = request.get_json()
+
+  event_id = data.get('event_id')
+  user_id = data.get('user_id')
+  activity_id = data.get('activity_id')
+
+  activity_vote = ActivityVote.query.filter_by(event_id=event_id, user_id=user_id, activity_id=activity_id).first()
+
+  if not activity_vote:
+    return jsonify({'error': 'Activity vote not found.'}), 400
+
+  try:
+    db.session.delete(activity_vote)
+    db.session.commit()
+    return jsonify({'message': 'Activity vote deleted successfully.'}), 200
+
+  except Exception as e:
+    db.session.rollback()
+    return jsonify({'error': f'An error occured: {str(e)}'}), 400
+
 # get activity votes
 @app.route('/get-activity-votes', methods=['POST'])
 def get_activity_votes():
@@ -967,6 +990,29 @@ def add_time_vote():
     db.session.add(new_time_vote)
     db.session.commit()
     return jsonify(new_time_vote.serialize()), 200
+
+  except Exception as e:
+    db.session.rollback()
+    return jsonify({'error': f'An error occured: {str(e)}'}), 400
+
+# remove a time vote
+@app.route('/remove-time-vote', methods=['POST'])
+def remove_time_vote():
+  data = request.get_json()
+
+  event_id = data.get('event_id')
+  user_id = data.get('user_id')
+  time_id = data.get('time_id')
+
+  time_vote = TimeVote.query.filter_by(event_id=event_id, user_id=user_id, time_id=time_id).first()
+
+  if not time_vote:
+    return jsonify({'error': 'Time vote not found.'}), 400
+
+  try:
+    db.session.delete(time_vote)
+    db.session.commit()
+    return jsonify({'message': 'Time vote deleted successfully.'}), 200
 
   except Exception as e:
     db.session.rollback()
