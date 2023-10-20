@@ -88,8 +88,6 @@ class Event(db.Model):
   allow_time_voting = db.Column(db.Boolean, nullable=False, default=True)
   allow_activity_input = db.Column(db.Boolean, nullable=False, default=True)
   allow_activity_voting = db.Column(db.Boolean, nullable=False, default=True)
-  chosen_time_id = db.Column(db.Integer, db.ForeignKey('times.id'))
-  chosen_activity_id = db.Column(db.Integer, db.ForeignKey('activities.id'))
 
   def __init__(self, owner_id, name, user_ids=None, start_time=None, end_time=None, location=None, description=None, allow_time_input=None, allow_time_voting=None, allow_activity_input=None, allow_activity_voting=None, chosen_time_id=None, chosen_activity_id=None):
     self.owner_id = owner_id
@@ -103,8 +101,6 @@ class Event(db.Model):
     self.allow_time_voting = allow_time_voting
     self.allow_activity_input = allow_activity_input
     self.allow_activity_voting = allow_activity_voting
-    self.chosen_time_id = chosen_time_id
-    self.chosen_activity_id = chosen_activity_id
     
   def __repr__(self):
     return f"<Event {self.id} - {self.name}>"
@@ -122,9 +118,7 @@ class Event(db.Model):
       'allow_time_input': self.allow_time_input,
       'allow_time_voting': self.allow_time_voting,
       'allow_activity_input': self.allow_activity_input,
-      'allow_activity_voting': self.allow_activity_voting,
-      'chosen_time_id': self.chosen_time_id,
-      'chosen_activity_id': self.chosen_activity_id
+      'allow_activity_voting': self.allow_activity_voting
     }
 
 class Attendee(db.Model):

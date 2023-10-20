@@ -85,7 +85,7 @@ export default function ViewActivities(props) {
       event_id: props.event_id
     })
     .then((response) => {
-      setVotes(votes.filter(vote => vote.activity_id != activity.id || vote.user_id != auth.userId));
+      setVotes(votes.filter(vote => vote.activity_id !== activity.id || vote.user_id !== auth.userId));
     })
     .catch((error) => console.error("Error deleting vote: ", error));
   }

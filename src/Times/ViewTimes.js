@@ -87,7 +87,7 @@ export default function ViewTimes(props) {
       event_id: props.event_id
     })
     .then((response) => {
-      setVotes(votes.filter(currentVote => currentVote.time_id !== time.id));
+      setVotes(votes.filter(currentVote => currentVote.time_id !== time.id || currentVote.user_id !== auth.userId));
     })
     .catch((error) => console.error("Error removing vote: ", error));
   }
