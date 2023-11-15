@@ -12,7 +12,7 @@ FYI: frontend runs on localhost:3000
 Install python
 Navigate into backend folder and create venv: py -m venv env  
 Navigate back into together_we_plan base folder and activate venv: .\backend\env\Scripts\activate  
-Run after activating venv: pip install flask python-dotenv Flask-SQLAlchemy Flask-CORS datetime psycopg2
+Run after activating venv: pip install flask python-dotenv Flask-SQLAlchemy Flask-CORS datetime psycopg2 requests
 Need a .flaskenv file in the backend folder with these things, make sure to specify your database username and password:  
   
 FLASK_APP=base.py

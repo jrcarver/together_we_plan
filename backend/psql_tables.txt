@@ -3,7 +3,8 @@ CREATE TABLE users (
   token VARCHAR (255) NOT NULL,
   email VARCHAR (255) NOT NULL, 
   name VARCHAR (255) NOT NULL,
-  alias VARCHAR (255)
+  alias VARCHAR (255),
+  location VARCHAR (255)
 );
 
 CREATE TABLE friends (

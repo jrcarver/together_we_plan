@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request
+from yelp import main
 import os
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
@@ -8,6 +9,8 @@ import logging
 
 app = Flask(__name__)
 CORS(app)
+
+app.register_blueprint(main)
 
 logging.basicConfig(level=logging.INFO)
 
@@ -34,6 +37,7 @@ class User(db.Model):
   email = db.Column(db.String(255), nullable=False)
   name = db.Column(db.String(255), nullable=False)
   alias = db.Column(db.String(255))
+  location = db.Column(db.String(255))
 
   def __init__(self, token, email, name):
     self.token = token
@@ -48,7 +52,8 @@ class User(db.Model):
       'id': self.id,
       'email': self.email,
       'name': self.name,
-      'alias': self.alias
+      'alias': self.alias,
+      'location': self.location
     }
   
 class Friends(db.Model):
@@ -306,6 +311,23 @@ def change_alias():
   db.session.commit()
 
   return jsonify({"message": "Successfully changed alias!"}), 200
+
+# create/change location
+@app.route('/user-location', methods=['POST'])
+def change_location():
+  user_id = request.json.get('user_id')
+  location = request.json.get('location')
+
+  user = User.query.filter_by(id=user_id).first()
+
+  if not user:
+    return jsonify({"message": "Couldn't find user."}), 404
+
+  user.location = location
+
+  db.session.commit()
+
+  return jsonify({"message": "Successfully changed location!"}), 200
 
 # get friends
 @app.route('/get-friends', methods=['POST'])

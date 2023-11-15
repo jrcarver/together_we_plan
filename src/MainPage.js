@@ -17,6 +17,7 @@ export default function MainPage(props) {
   const [email, setEmail] = useState('');
   const [userId, setUserId] = useState('');
   const [alias, setAlias] = useState('');
+  const [location, setLocation] = useState('');
 
   const backend = 'http://localhost:5000';
   
@@ -37,7 +38,8 @@ export default function MainPage(props) {
         setName(response.data.name),
         setEmail(response.data.email),
         setUserId(response.data.id),
-        setAlias(response.data.alias)
+        setAlias(response.data.alias),
+        setLocation(response.data.location)
       ))
       .catch(error => console.error('Error fetching/creating user data: ', error))
     }
@@ -48,7 +50,7 @@ export default function MainPage(props) {
   props.setUserId(user.id);
 
   return(
-    <Auth.Provider value={{ backend, name, email, userId, alias }}>
+    <Auth.Provider value={{ backend, name, email, userId, alias, location }}>
       <div className='wrapper'>
         <p>Hello {alias ? alias : user.name}!</p>
         <CreateEventButton />

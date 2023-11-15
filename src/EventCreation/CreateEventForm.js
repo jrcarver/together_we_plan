@@ -11,13 +11,13 @@ import AddTimes from "../Times/AddTimes";
 export default function CreateEventForm(props) {
   const auth = useContext(Auth);
 
-  const [name, setName] = useState('');
+  const [name, setName] = useState(props.name || '');
   const [user_ids, setUserIds] = useState([auth.userId]);
   const [start_time, setStartTime] = useState(null);
   const [end_time, setEndTime] = useState(null);
   const [times, setTimes] = useState([]);
-  const [location, setLocation] = useState('');
-  const [description, setDescription] = useState('');
+  const [location, setLocation] = useState(props.location || '');
+  const [description, setDescription] = useState(props.url || '');
   const [resetAttendees, setResetAttendees] = useState(false);
   const [timeInput, setTimeInput] = useState(true);
   const [timeVoting, setTimeVoting] = useState(true);
