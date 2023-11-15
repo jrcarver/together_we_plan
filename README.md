@@ -29,6 +29,11 @@ There are table creation commands to run in postgres in psql_tables.txt in the b
 
 FYI: postgres runs on localhost:5432
 
+### yelp API setup
+Create an account at www.yelp.com/developers
+Create an app and obtain an API key
+Input the API key into your .flaskenv file
+
 # Run it!
 
 ### Start frontend from command line in base folder  
