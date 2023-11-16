@@ -32,7 +32,9 @@ FYI: postgres runs on localhost:5432
 ### yelp API setup
 Create an account at www.yelp.com/developers  
 Create an app and obtain an API key  
-Input the API key into your .flaskenv file  
+Input the API key into your .flaskenv file:  
+
+YELP_API_KEY=your_yelp_api_key  
 
 # Run it!
 
