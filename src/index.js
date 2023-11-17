@@ -9,8 +9,8 @@ const root = createRoot(document.getElementById('root'));
 root.render(
   <body className='wrapper' > 
     <Auth0Provider
-      domain="dev-4r2t66psl6buvom1.us.auth0.com"
-      clientId="OQddVsSOFkWHpHvkSmOeeZ9Ym7HnKInN"
+      domain={process.env.REACT_APP_AUTH0_DOMAIN}
+      clientId={process.env.REACT_APP_AUTH0_CLIENT_ID}
       authorizationParams={{
         redirect_uri: "http://localhost:3000"
       }}
