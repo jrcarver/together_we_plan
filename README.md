@@ -34,7 +34,7 @@ Create an account at auth0.com
 Setup an application and select React  
 Put http://localhost:3000 into your Allowed Callback URLS, Allowed Logout URLs, and Allowed Web Origins  
 Create a .env file at your project's root  
-Create variables for your Auth0 Domain and Client ID and copy these over from your Auth0 application  
+Create variables in .env for your Auth0 Domain and Client ID and copy these over from your Auth0 application:  
   
 REACT_APP_AUTH0_DOMAIN=domain  
 REACT_APP_AUTH0_CLIENT_ID=client_id  
