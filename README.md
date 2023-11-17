@@ -33,8 +33,12 @@ FYI: postgres runs on localhost:5432
 Create an account at auth0.com  
 Setup an application and select React  
 Put http://localhost:3000 into your Allowed Callback URLS, Allowed Logout URLs, and Allowed Web Origins  
-Copy out your Auth0 Domain and Client ID from your application to copy into your code  
-
+Create a .env file at your project's root  
+Create variables for your Auth0 Domain and Client ID and copy these over from your Auth0 application  
+  
+REACT_APP_AUTH0_DOMAIN=domain
+REACT_APP_AUTH0_CLIENT_ID=client_id
+  
 ### yelp API Setup
 Create an account at www.yelp.com/developers  
 Create an app and obtain an API key  
