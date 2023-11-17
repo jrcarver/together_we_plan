@@ -24,7 +24,7 @@ FYI: backend runs on localhost:5000
 
 ### Postgres Setup
 Install Postgres
-Create a together_we_plan database, use whatever username and password you want to own it just specify it in your .flaskenv file  
+Create a together_we_plan database, use whatever username and password you want to just specify it in your .flaskenv file  
 There are table creation commands to run in postgres in psql_tables.txt in the backend folder  
 
 FYI: postgres runs on localhost:5432
