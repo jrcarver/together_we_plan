@@ -15,10 +15,10 @@ Navigate back into together_we_plan base folder and activate venv: .\backend\env
 Run after activating venv: pip install flask python-dotenv Flask-SQLAlchemy Flask-CORS datetime psycopg2 requests
 Need a .flaskenv file in the backend folder with these things, make sure to specify your database username and password:  
   
-FLASK_APP=base.py
-FLASK_ENV=development
-DB_USERNAME=username
-DB_PASSWORD=password
+FLASK_APP=base.py  
+FLASK_ENV=development  
+DB_USERNAME=username  
+DB_PASSWORD=password  
 
 FYI: backend runs on localhost:5000
 
@@ -29,7 +29,13 @@ There are table creation commands to run in postgres in psql_tables.txt in the b
 
 FYI: postgres runs on localhost:5432
 
-### yelp API setup
+### Auth0 Setup  
+Create an account at auth0.com  
+Setup an application and select React  
+Put http://localhost:3000 into your Allowed Callback URLS, Allowed Logout URLs, and Allowed Web Origins  
+Copy out your Auth0 Domain and Client ID from your application to copy into your code  
+
+### yelp API Setup
 Create an account at www.yelp.com/developers  
 Create an app and obtain an API key  
 Input the API key into your .flaskenv file:  
